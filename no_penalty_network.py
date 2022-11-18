@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import random
 import time
 import copy
-
+import itertools
 
 def distance(x1, x2, y1, y2):
     '''
@@ -45,7 +45,7 @@ def Setting(FILENAME):
             乗り降り決定変数
     '''
     mat = []
-    with open('/home/kurozumi/デスクトップ/benchmark2/' + FILENAME, 'r', encoding='utf-8') as fin:
+    with open('/home/kurozumi/デスクトップ/shin_darpbench/' + FILENAME, 'r', encoding='utf-8') as fin:
         for line in fin.readlines():
             row = []
             toks = line.split()
@@ -959,11 +959,22 @@ def main(Loop,initial_Route):
     syutyu_loop = 0
     saisyo = 0
     data2 = np.zeros((Loop, 2))
+    each_penalty = list(np.zeros(Syaryo))
+    loop_riyo_list = [[] for i in range(Syaryo)]
     while True:
         skip = 0
         best_neighbour = np.zeros(2)
         riyoukyaku_list = np.arange(1,n/2)
-        for i in riyoukyaku_list:
+        loop_riyo_list = [[] for i in range(Syaryo)]
+        for newloop in range(Syaryo):
+            each_penalty[newloop] = sum(penalty_sum_route_k(initial_Route[newloop]))
+        each_penalty_sort = sorted(each_penalty,reverse=True)
+        for newloop in range(len(each_penalty_sort)):
+            loop_riyo_list[newloop] = initial_Route[each_penalty.index(each_penalty_sort[newloop])]
+        loop_riyo_list = list(itertools.chain.from_iterable(loop_riyo_list))
+        loop_riyo_list = np.array(loop_riyo_list)
+        loop_riyo_list = loop_riyo_list[loop_riyo_list < n/2]
+        for i in loop_riyo_list:
             syaryo_loop = np.arange(Syaryo)
             syaryo_loop = np.delete(syaryo_loop,int(syaryo_tokutei(initial_Route,i)))
             for j in syaryo_loop:
@@ -1012,10 +1023,11 @@ def main(Loop,initial_Route):
             parameta_loop = 0
         data2[loop][1] = Opt
         data2[loop][0] = time.time() - t1
-        if data2[loop][1] == data2[loop - 1][1]:
-            equ += 1
+
+        if data2[loop-1][1] == data2[loop][1]:
+            equ +=1
         else:
-            equ = 0
+            equ=0
         loop += 1
         if loop == Loop or equ ==50:
             break
@@ -1026,7 +1038,7 @@ def main(Loop,initial_Route):
     print(saiteki)
     print(penalty_sum(saiteki_route)[1])
     print(keisu)
-    np.savetxt('/home/kurozumi/デスクトップ/data/check' + FILENAME + '.csv', data2, delimiter=",")
+    #np.savetxt('/Users/kurozumi ryouho/Desktop/benchmark2/kekka/' + FILENAME + 'main.csv', data2, delimiter=",")
     return saiteki_route,saiteki
 
 def pena_cal(route):
@@ -1041,7 +1053,7 @@ def pena_cal(route):
 
 if __name__ == '__main__':
     t1 = time.time()
-    FILENAME = 'darp04EX.txt'
+    FILENAME = 'darp02EX.txt'
     Setting_Info = Setting(FILENAME)
     Setting_Info_base = Setting_Info[0]  # ベンチマーク問題の１行目（設定情報）を抜き出した変数
     Syaryo = int(Setting_Info_base[0])  # 車両数
@@ -1059,7 +1071,7 @@ if __name__ == '__main__':
     time_expand = 1
 
     FILENAME = FILENAME.replace('.txt', '')
-    G = nx.read_gpickle('time_network' + FILENAME)
+    G = nx.read_gpickle('time_network2' + FILENAME)
 
     G_copy = copy.deepcopy(G)
     # ----------------------パラメータ-------------------------------------
@@ -1084,7 +1096,7 @@ if __name__ == '__main__':
     opt_loot = []
     opt_info = []
 
-    LOOP = 1
+    LOOP = 3
     M_loop =1000
     data = np.zeros((LOOP, 3))
 
